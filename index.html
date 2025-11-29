@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>火的飢餓：荒原園丁（修正版）</title>
+    <title>火的飢餓：日常侵蝕版</title>
     <style>
         body {
             background-color: #121212;
@@ -61,7 +61,7 @@
             min-height: 120px;
             margin-bottom: 40px;
             font-size: 1.15em;
-            white-space: pre-wrap; /* 保留換行格式 */
+            white-space: pre-wrap; 
         }
 
         .choices {
@@ -107,12 +107,11 @@
     
     <div class="stats-bar">
         <div class="stat-item">神性 (Divinity): <span id="divinity" class="stat-value">10%</span></div>
-        <div class="stat-item">支配度 (Control): <span id="dominance" class="stat-value">0%</span></div>
+        <div class="stat-item">依賴度 (Dependency): <span id="dependency" class="stat-value">0%</span></div>
     </div>
 
     <div id="story-text" class="fade-in">
-        正在載入劇本...<br>
-        (如果長時間停留在此畫面，表示瀏覽器禁止了腳本執行)
+        正在載入劇本...
     </div>
 
     <div class="choices" id="choices-container">
@@ -120,182 +119,227 @@
 </div>
 
 <script>
-    // 使用 window.onload 確保頁面載入後才執行
     window.onload = function() {
         
         // 遊戲狀態
         const state = {
             divinity: 10,
-            dominance: 0,
-            hemingMoney: 0,
-            huihuiWeight: 0,
-            etherPain: 0
+            dependency: 0, // 新增：依賴度（越高越容易在最後被收割）
+            hemingStatus: 0,
+            huihuiStatus: 0,
+            etherStatus: 0
         };
 
-        // 文本數據 (使用反引號 ` ` 避免換行錯誤)
+        // 文本數據
         const scenes = {
             start: {
-                text: `你是火。你不需要上帝，你相信，你也可以是上帝。
+                text: `你是火。在你眼中，愛情不過是一場漫長的獻祭。
+你還不想立刻毀掉她們，你想先「改造」她們。
+在那些看似平常的情侶日常裡，你如何扮演上帝？
 
-在你面前有三塊不同的「田地」，等待你去開墾、除草、收割。
-你感到飢餓。你要從誰開始？`,
+請選擇今天的行程：`,
                 choices: [
-                    { text: "前往【河明】：褪色的金主", target: "heming_scene" },
-                    { text: "前往【灰灰】：陰影中的暴食者", target: "huihui_scene" },
-                    { text: "前往【以太】：沉默的受難者", target: "ether_scene" }
+                    { text: "【日常：試衣間】與灰灰去買衣服", target: "huihui_daily" },
+                    { text: "【日常：同學會】陪河明參加聚會", target: "heming_daily" },
+                    { text: "【日常：看電影】與以太的週末夜", target: "ether_daily" },
+                    { text: "跳過日常，直接進入「收割」階段", target: "harvest_phase" }
                 ]
             },
             
-            // --- 河明支線 ---
+            // --- 灰灰的日常 (身體羞辱與控制) ---
+            huihui_daily: {
+                text: `灰灰拿著一件鮮紅色的連身裙，興奮地在你面前比劃。
+那是她以前不敢穿的顏色，但最近她以為你在意她，所以想變得漂亮一點。
+鏡子裡的她，身形依然豐腴，但在紅色裙子下顯得生機勃勃。
+
+你看著她期待的眼神，決定說：`,
+                choices: [
+                    { text: "「紅色太顯眼了，這會讓你看起來像一塊...過度膨脹的肉。」", target: "huihui_daily_bad" },
+                    { text: "「我喜歡你穿灰色的。像影子一樣，那才是最安全的顏色。」", target: "huihui_daily_control" }
+                ]
+            },
+            huihui_daily_bad: {
+                text: `灰灰的笑容瞬間凍結。她看著鏡子裡的自己，原本的自信變成了羞恥。
+她默默放回了紅裙子，低下頭說：「對不起，你是對的。」
+她對身體的厭惡加深了，而你是唯一能「包容」她醜陋的人。`,
+                effect: { divinity: 5, dependency: 10 },
+                choices: [{ text: "返回選擇行程", target: "start" }]
+            },
+            huihui_daily_control: {
+                text: `你溫柔地幫她挑了一件寬大的灰色麻布衣，那是你喜歡的顏色——灰霧的顏色。
+「穿上這個，你就屬於我了。」你說。
+她感動地穿上了那件讓她消失在背景裡的衣服，覺得被你保護著。`,
+                effect: { divinity: 5, dependency: 15 },
+                choices: [{ text: "返回選擇行程", target: "start" }]
+            },
+
+            // --- 河明的日常 (社交隔離與自我懷疑) ---
+            heming_daily: {
+                text: `河明帶你參加她大學同學的聚會。她曾經是個開朗的人，但在這群老朋友面前，她現在顯得畏縮。
+有人問起她：「河明，你最近工作還好嗎？聽說你辭職了？」
+河明正要開口解釋她為了你的餐廳所做的犧牲。
+
+你決定：`,
+                choices: [
+                    { text: "搶在她前面開口：「她現在需要休息，以前的工作太消耗她了。」", target: "heming_daily_silence" },
+                    { text: "在桌下輕輕捏她的手，用眼神暗示她：「別說錯話。」", target: "heming_daily_fear" }
+                ]
+            },
+            heming_daily_silence: {
+                text: `你替她發言，語氣體貼得無懈可擊。
+朋友們紛紛稱讚你：「真是個好男友。」
+河明張開的嘴又閉上了。她發現自己失去了聲音，在這個世界上，只有你能代表她說話。`,
+                effect: { divinity: 5, dependency: 15 },
+                choices: [{ text: "返回選擇行程", target: "start" }]
+            },
+            heming_daily_fear: {
+                text: `她接收到了你的信號，立刻變得結巴，草草結束了話題。
+整晚她都緊緊抓著你的袖子，像個怕做錯事的孩子。
+離開聚會時，她甚至向你道歉：「對不起，我剛才是不是表現得很丟臉？」`,
+                effect: { divinity: 10, dependency: 10 },
+                choices: [{ text: "返回選擇行程", target: "start" }]
+            },
+
+            // --- 以太的日常 (情感否定與痛覺轉移) ---
+            ether_daily: {
+                text: `週末晚上，你們窩在沙發上看電影。那是一部感人的愛情片，女主角在雨中哭泣。
+以太也跟著哭了，她的眼淚流得很兇，彷彿觸動了她內心深處某個關於被愛的傷口。
+她轉頭看向你，渴望一個擁抱，或者一句安慰。
+
+你決定：`,
+                choices: [
+                    { text: "冷眼旁觀：「這只是電影，你的眼淚太廉價了。」", target: "ether_daily_cold" },
+                    { text: "用手背輕輕滑過她的臉頰，然後用力掐住她的下巴。", target: "ether_daily_pain" }
+                ]
+            },
+            ether_daily_cold: {
+                text: `她愣住了，眼淚還掛在臉上，卻不敢再流下來。
+「你太情緒化了，這很不健康。」你以理性的姿態審判她。
+她擦乾眼淚，開始懷疑自己的感受是否都是錯的。她需要你來告訴她什麼才是「正確的情緒」。`,
+                effect: { divinity: 5, dependency: 10 },
+                choices: [{ text: "返回選擇行程", target: "start" }]
+            },
+            ether_daily_pain: {
+                text: `你掐著她的下巴，力道大到讓她輕輕吸了一口氣。
+「比起哭，這樣的痛是不是更真實？」你微笑著問。
+她看著你的眼睛，迷茫地點了點頭。她把痛覺誤認為了親密。`,
+                effect: { divinity: 10, dependency: 15 },
+                choices: [{ text: "返回選擇行程", target: "start" }]
+            },
+
+            // --- 收割階段 (原本的劇情) ---
+            harvest_phase: {
+                text: `日常的鋪墊已經足夠。她們現在對你言聽計從，像等待收割的麥子。
+現在，你的鐮刀要揮向誰？`,
+                choices: [
+                    { text: "前往【河明】：榨乾最後一分錢", target: "heming_scene" },
+                    { text: "前往【灰灰】：填滿最後一口飯", target: "huihui_scene" },
+                    { text: "前往【以太】：給予最後的痛楚", target: "ether_scene" }
+                ]
+            },
+
+            // ... (保留原本的收割劇情，增加數值判斷) ...
             heming_scene: {
-                text: `河明坐在你對面。她為了你離開了丈夫和孩子，連銀行的存款也快被掏空了。
-她的影子顏色變得很淡，幾乎像空氣一樣。
-你需要錢來購買餐廳的鍋子和爐具。`,
+                text: `河明的存款已見底。她看著你，眼神中還有最後一絲期待。
+「我把一切都給你了...你會留下來嗎？」`,
                 choices: [
-                    { text: "【情感勒索】：「你知道我不會輕易對別人開口，但你是我最親的人。」", target: "heming_action_1" },
-                    { text: "【冷漠忽視】：不再為她拍照，對她的痛苦保持寬容的緘默。", target: "heming_action_2" },
-                    { text: "返回選擇對象", target: "start" }
+                    { text: "拿走錢，告訴她：「這就夠了。」然後消失。", target: "heming_end" }
                 ]
             },
-            heming_action_1: {
-                text: `你告訴她：「再不訂購鍋子和爐具，就來不及開張。」
-她垂下眼睛咬著下唇。幾分鐘後，她告訴了你所有積蓄的數目。
-
-幾天後，你的帳戶多了一筆款項。這就夠了。`,
-                effect: { divinity: 10, dominance: 15, hemingMoney: 1 },
-                choices: [
-                    { text: "她已無利用價值，尋找下一個目標", target: "start" }
-                ]
-            },
-            heming_action_2: {
-                text: `你像上帝一樣，對她的苦難保持緘默。
-她因為恐懼失去你，變得更加卑微。
-
-你看著她逐漸透明的樣子，感到一種殘酷的滿足。`,
-                effect: { divinity: 15, dominance: 5 },
-                choices: [
-                    { text: "繼續", target: "start" }
-                ]
+            heming_end: {
+                text: `你拿到了錢。河明的影子徹底消失了。
+因為之前的日常鋪墊（高依賴度），她沒有吵鬧，只是安靜地崩潰了。
+她覺得是自己不夠好，無法滿足你的夢想。`,
+                effect: { divinity: 20, hemingStatus: 1 },
+                choices: [{ text: "尋找下一個目標", target: "check_end" }]
             },
 
-            // --- 灰灰支線 ---
             huihui_scene: {
-                text: `灰灰躲在陰影裡。她覺得自己的影子像海一樣安全。
-午餐時間到了，你準備了一桌豐盛的菜餚。
-她看著食物，強忍著嘔吐的衝動。`,
+                text: `灰灰已經胖得無法看清自己的腳尖。
+你端上最後一盤她過敏的食物。`,
                 choices: [
-                    { text: "【強制飼育】：逼她吃下讓她過敏的蘑菇炒蛋和討厭的蘆筍大蝦。", target: "huihui_action_1" },
-                    { text: "【精神控制】：抱怨她盛飯的形狀不對，或者喝水的速度太慢。", target: "huihui_action_2" },
-                    { text: "返回選擇對象", target: "start" }
+                    { text: "命令她：「吃下去，這是為了你好。」", target: "huihui_end" }
                 ]
             },
-            huihui_action_1: {
-                text: `你盯著她進食，確保食物經過她的喉嚨。
-你對她說：「進食並不是為了得到愉悅。」
-看著她吞嚥下那些讓她痛苦的食物，你感到一種飼主的快感。`,
-                effect: { divinity: 5, dominance: 20, huihuiWeight: 1 },
-                choices: [
-                    { text: "繼續", target: "start" }
-                ]
-            },
-            huihui_action_2: {
-                text: `你的慍怒沒有具體理由，但足以讓她瑟瑟發抖。
-她在你的注視下，覺得自己像一所積滿廢物的房間。
-她為了討好你，把自己縮得更小了。`,
-                effect: { divinity: 10, dominance: 10 },
-                choices: [
-                    { text: "繼續", target: "start" }
-                ]
+            huihui_end: {
+                text: `她邊哭邊吃，因為她記得你在試衣間說過，她是屬於你的影子。
+她吞下了所有的食物，也吞下了所有的尊嚴。
+你感到無比的滿足。`,
+                effect: { divinity: 20, huihuiStatus: 1 },
+                choices: [{ text: "尋找下一個目標", target: "check_end" }]
             },
 
-            // --- 以太支線 ---
             ether_scene: {
-                text: `你無法忘掉以太腿部的線條，那就像田裡未除的野草。
-房間裡只有靜默，她試圖開口說話。
-她問：「你把我當作什麼呢？」聲音像一頭受傷的獸。`,
+                text: `以太在深夜質問你：「你把我當什麼？」
+但因為之前的調教，她的聲音顫抖而不自信。`,
                 choices: [
-                    { text: "【語言利刃】：「只有不確定自己是什麼的人，才會在意別人怎樣看待他。」", target: "ether_action_1" },
-                    { text: "【肉體痛楚】：按壓她虎口的穴道，直到她慘叫。", target: "ether_action_2" },
-                    { text: "返回選擇對象", target: "start" }
+                    { text: "告訴她：「愛的意思就是，我可以任意傷害你。」", target: "ether_end" }
                 ]
             },
-            ether_action_1: {
-                text: `你冷冷地打斷了她的句子。
-你心裡想著：「愛的意思就是，我可以任意傷害你。」
-她陷入了絕望的沉默，你感到神清氣爽。`,
-                effect: { divinity: 20, dominance: 10, etherPain: 1 },
-                choices: [
-                    { text: "繼續", target: "start" }
-                ]
+            ether_end: {
+                text: `她接受了這個邏輯。
+既然痛是愛，那你對她的傷害就是最深沉的愛。
+她不再反抗，成為了你永恆的信徒。`,
+                effect: { divinity: 20, etherStatus: 1 },
+                choices: [{ text: "尋找下一個目標", target: "check_end" }]
             },
-            ether_action_2: {
-                text: `你用力按壓，力度越來越大。
-這世上沒有什麼無法被取代，尤其是痛。
-看著她扭曲的臉，你覺得這才是一種真實的交流。`,
-                effect: { divinity: 10, dominance: 20 },
+
+            check_end: {
+                text: `你環顧四周，檢查還有沒有未收割的作物。`,
                 choices: [
-                    { text: "繼續", target: "start" }
+                    { text: "繼續收割其他人", target: "harvest_phase" } // 簡化邏輯，讓玩家自己選
                 ]
             },
 
-            // --- 結局判定 ---
+            // 結局
             ending_god: {
-                text: `【結局：種植上帝】
+                text: `【結局：荒原上的神】
 
-你的神性已達到頂峰。
-野草已被清除，土地已被開墾。
-女人們在你眼中不再是人，而是供你重生的養分。
-你不需要上帝，因為你已經成為了自己的上帝。`,
+所有的田地都已荒蕪，所有的養分都歸於你。
+你不需要任何人，你也不愛任何人。
+你站在鏡子前，看見裡面只有你自己——一個巨大的、吞噬一切的神。`,
                 choices: [
-                    { text: "重新開始這場獻祭", target: "reset" }
+                    { text: "重新開始", target: "reset" }
                 ]
             }
         };
 
-        // 核心功能
+        // 邏輯控制
         window.renderScene = function(sceneKey) {
-            const scene = scenes[sceneKey];
-            const textElement = document.getElementById('story-text');
-            const choicesContainer = document.getElementById('choices-container');
-
-            if (!scene) {
-                console.error("找不到場景:", sceneKey);
-                textElement.innerText = "遊戲發生錯誤：找不到場景 " + sceneKey;
-                return;
-            }
-
-            // 檢查勝利條件 (滿神性 或 三人皆已被收割)
-            if (state.divinity >= 100 || (state.hemingMoney > 0 && state.huihuiWeight > 0 && state.etherPain > 0)) {
-                if (sceneKey !== 'ending_god' && sceneKey !== 'reset') {
+            // 自動跳轉結局判斷
+            if (sceneKey === 'check_end') {
+                if (state.hemingStatus && state.huihuiStatus && state.etherStatus) {
                     renderScene('ending_god');
+                    return;
+                } else {
+                    renderScene('harvest_phase'); // 回去選還沒死的人
                     return;
                 }
             }
 
-            // 處理重置
+            const scene = scenes[sceneKey];
+            const textElement = document.getElementById('story-text');
+            const choicesContainer = document.getElementById('choices-container');
+
             if (sceneKey === 'reset') {
                 state.divinity = 10;
-                state.dominance = 0;
-                state.hemingMoney = 0;
-                state.huihuiWeight = 0;
-                state.etherPain = 0;
-                updateStats({}); 
+                state.dependency = 0;
+                state.hemingStatus = 0;
+                state.huihuiStatus = 0;
+                state.etherStatus = 0;
+                updateStats({});
                 renderScene('start');
                 return;
             }
 
-            // 更新文本
+            // 動畫與文本更新
             textElement.classList.remove('fade-in');
-            void textElement.offsetWidth; // 觸發重繪動畫
+            void textElement.offsetWidth;
             textElement.classList.add('fade-in');
             textElement.innerText = scene.text;
 
-            // 更新數值
-            if (scene.effect) {
-                updateStats(scene.effect);
-            }
+            if (scene.effect) updateStats(scene.effect);
 
-            // 生成選項按鈕
             choicesContainer.innerHTML = '';
             scene.choices.forEach(choice => {
                 const button = document.createElement('button');
@@ -307,21 +351,15 @@
 
         function updateStats(effect) {
             state.divinity += effect.divinity || 0;
-            state.dominance += effect.dominance || 0;
-            state.hemingMoney += effect.hemingMoney || 0;
-            state.huihuiWeight += effect.huihuiWeight || 0;
-            state.etherPain += effect.etherPain || 0;
-
-            // 限制最大值 100
+            state.dependency += effect.dependency || 0;
+            
+            // 限制
             state.divinity = Math.min(100, state.divinity);
-            state.dominance = Math.min(100, state.dominance);
 
             document.getElementById('divinity').innerText = state.divinity + "%";
-            document.getElementById('dominance').innerText = state.dominance + "%";
+            document.getElementById('dependency').innerText = state.dependency + "%";
         }
 
-        // 開始遊戲
-        console.log("Game Initialized");
         renderScene('start');
     };
 </script>
