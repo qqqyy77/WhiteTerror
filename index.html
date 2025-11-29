@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>火的飢餓：荒原園丁</title>
+    <title>火的飢餓：荒原園丁（修正版）</title>
     <style>
         body {
             background-color: #121212;
@@ -14,7 +14,7 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            line-height: 1.6;
+            line-height: 1.8;
         }
 
         .game-container {
@@ -41,25 +41,27 @@
             display: flex;
             justify-content: space-between;
             margin-bottom: 30px;
-            padding: 10px;
+            padding: 15px;
             background-color: #252525;
             border-left: 3px solid #a72828;
+            border-radius: 4px;
         }
 
         .stat-item {
-            font-size: 0.9em;
+            font-size: 0.95em;
         }
 
         .stat-value {
             color: #a72828;
             font-weight: bold;
+            margin-left: 5px;
         }
 
         #story-text {
-            min-height: 150px;
-            margin-bottom: 30px;
-            font-size: 1.1em;
-            white-space: pre-wrap;
+            min-height: 120px;
+            margin-bottom: 40px;
+            font-size: 1.15em;
+            white-space: pre-wrap; /* 保留換行格式 */
         }
 
         .choices {
@@ -72,31 +74,29 @@
             background-color: #2a2a2a;
             color: #ccc;
             border: 1px solid #444;
-            padding: 15px;
+            padding: 18px;
             text-align: left;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             font-family: inherit;
-            font-size: 1em;
+            font-size: 1.05em;
+            border-radius: 4px;
         }
 
         button:hover {
             background-color: #a72828;
             color: #fff;
-            border-color: #a72828;
-        }
-
-        .highlight {
-            color: #a72828;
+            border-color: #ff4d4d;
+            transform: translateX(5px);
         }
 
         .fade-in {
-            animation: fadeIn 1s;
+            animation: fadeIn 0.8s;
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
@@ -111,9 +111,8 @@
     </div>
 
     <div id="story-text" class="fade-in">
-        你是火。你不需要上帝，你相信，你也可以是上帝。<br><br>
-        在你面前有三塊不同的「田地」，等待你去開墾、除草、收割。<br>
-        你感到飢餓。你要從誰開始？
+        正在載入劇本...<br>
+        (如果長時間停留在此畫面，表示瀏覽器禁止了腳本執行)
     </div>
 
     <div class="choices" id="choices-container">
@@ -121,173 +120,210 @@
 </div>
 
 <script>
-    // 遊戲狀態
-    const state = {
-        divinity: 10,
-        dominance: 0,
-        hemingMoney: 0,
-        huihuiWeight: 0, // 象徵她的陰影與依賴
-        etherPain: 0     // 象徵她的自我崩潰
-    };
-
-    // 文本數據 (基於小說內容)
-    const scenes = {
-        start: {
-            [span_0](start_span)text: "你是火。你不需要上帝，你相信，你也可以是上帝[span_0](end_span)。\n\n在你面前有三塊不同的「田地」，等待你去開墾、除草、收割。\n你感到飢餓。你要從誰開始？",
-            choices: [
-                { text: "前往【河明】：褪色的金主", target: "heming_scene" },
-                { text: "前往【灰灰】：陰影中的暴食者", target: "huihui_scene" },
-                { text: "前往【以太】：沉默的受難者", target: "ether_scene" }
-            ]
-        },
+    // 使用 window.onload 確保頁面載入後才執行
+    window.onload = function() {
         
-        // --- 河明支線 ---
-        heming_scene: {
-            [span_1](start_span)text: "河明坐在你對面。她為了你離開了丈夫和孩子，連銀行的存款也快被掏空了[span_1](end_span)。\n她的影子顏色變得很淡，幾乎像空氣一樣。\n你需要錢來購買餐廳的鍋子和爐具。",
-            choices: [
-                { text: "【情感勒索】：「你知道我不會輕易對別人開口，但你是我最親的人。」", target: "heming_action_1" },
-                { text: "【冷漠忽視】：不再為她拍照，對她的痛苦保持寬容的緘默。", target: "heming_action_2" },
-                { text: "返回選擇對象", target: "start" }
-            ]
-        },
-        heming_action_1: {
-            [span_2](start_span)text: "你告訴她：「再不訂購鍋子和爐具，就來不及開張。」\n她垂下眼睛咬著下唇。幾分鐘後，她告訴了你所有積蓄的數目[span_2](end_span)。\n\n幾天後，你的帳戶多了一筆款項。這就夠了。",
-            effect: { divinity: 10, dominance: 15, hemingMoney: 1 },
-            choices: [
-                { text: "她已無利用價值，尋找下一個目標", target: "start" }
-            ]
-        },
-        heming_action_2: {
-            [span_3](start_span)text: "你像上帝一樣，對她的苦難保持緘默[span_3](end_span)。\n她因為恐懼失去你，變得更加卑微。\n\n你看著她逐漸透明的樣子，感到一種殘酷的滿足。",
-            effect: { divinity: 15, dominance: 5 },
-            choices: [
-                { text: "繼續", target: "start" }
-            ]
-        },
+        // 遊戲狀態
+        const state = {
+            divinity: 10,
+            dominance: 0,
+            hemingMoney: 0,
+            huihuiWeight: 0,
+            etherPain: 0
+        };
 
-        // --- 灰灰支線 ---
-        huihui_scene: {
-            [span_4](start_span)text: "灰灰躲在陰影裡。她覺得自己的影子像海一樣安全[span_4](end_span)。\n午餐時間到了，你準備了一桌豐盛的菜餚。\n她看著食物，強忍著嘔吐的衝動。",
-            choices: [
-                { text: "【強制飼育】：逼她吃下讓她過敏的蘑菇炒蛋和討厭的蘆筍大蝦。", target: "huihui_action_1" },
-                { text: "【精神控制】：抱怨她盛飯的形狀不對，或者喝水的速度太慢。", target: "huihui_action_2" },
-                { text: "返回選擇對象", target: "start" }
-            ]
-        },
-        huihui_action_1: {
-            [span_5](start_span)text: "你盯著她進食，確保食物經過她的喉嚨[span_5](end_span)。\n你對她說：「進食並不是為了得到愉悅。」\n看著她吞嚥下那些讓她痛苦的食物，你感到一種飼主的快感。",
-            effect: { divinity: 5, dominance: 20, huihuiWeight: 1 },
-            choices: [
-                { text: "繼續", target: "start" }
-            ]
-        },
-        huihui_action_2: {
-            [span_6](start_span)text: "你的慍怒沒有具體理由，但足以讓她瑟瑟發抖[span_6](end_span)。\n她在你的注視下，覺得自己像一所積滿廢物的房間。\n她為了討好你，把自己縮得更小了。",
-            effect: { divinity: 10, dominance: 10 },
-            choices: [
-                { text: "繼續", target: "start" }
-            ]
-        },
+        // 文本數據 (使用反引號 ` ` 避免換行錯誤)
+        const scenes = {
+            start: {
+                text: `你是火。你不需要上帝，你相信，你也可以是上帝。
 
-        // --- 以太支線 ---
-        ether_scene: {
-            [span_7](start_span)text: "你無法忘掉以太腿部的線條，那就像田裡未除的野草[span_7](end_span)。\n房間裡只有靜默，她試圖開口說話。\n她問：「你把我當作什麼呢？」聲音像一頭受傷的獸。",
-            choices: [
-                { text: "【語言利刃】：「只有不確定自己是什麼的人，才會在意別人怎樣看待他。」", target: "ether_action_1" },
-                { text: "【肉體痛楚】：按壓她虎口的穴道，直到她慘叫。", target: "ether_action_2" },
-                { text: "返回選擇對象", target: "start" }
-            ]
-        },
-        ether_action_1: {
-            [span_8](start_span)text: "你冷冷地打斷了她的句子。\n你心裡想著：「愛的意思就是，我可以任意傷害你。」[span_8](end_span)\n她陷入了絕望的沉默，你感到神清氣爽。",
-            effect: { divinity: 20, dominance: 10, etherPain: 1 },
-            choices: [
-                { text: "繼續", target: "start" }
-            ]
-        },
-        ether_action_2: {
-            [span_9](start_span)text: "你用力按壓，力度越來越大。\n這世上沒有什麼無法被取代，尤其是痛[span_9](end_span)。\n看著她扭曲的臉，你覺得這才是一種真實的交流。",
-            effect: { divinity: 10, dominance: 20 },
-            choices: [
-                { text: "繼續", target: "start" }
-            ]
-        },
+在你面前有三塊不同的「田地」，等待你去開墾、除草、收割。
+你感到飢餓。你要從誰開始？`,
+                choices: [
+                    { text: "前往【河明】：褪色的金主", target: "heming_scene" },
+                    { text: "前往【灰灰】：陰影中的暴食者", target: "huihui_scene" },
+                    { text: "前往【以太】：沉默的受難者", target: "ether_scene" }
+                ]
+            },
+            
+            // --- 河明支線 ---
+            heming_scene: {
+                text: `河明坐在你對面。她為了你離開了丈夫和孩子，連銀行的存款也快被掏空了。
+她的影子顏色變得很淡，幾乎像空氣一樣。
+你需要錢來購買餐廳的鍋子和爐具。`,
+                choices: [
+                    { text: "【情感勒索】：「你知道我不會輕易對別人開口，但你是我最親的人。」", target: "heming_action_1" },
+                    { text: "【冷漠忽視】：不再為她拍照，對她的痛苦保持寬容的緘默。", target: "heming_action_2" },
+                    { text: "返回選擇對象", target: "start" }
+                ]
+            },
+            heming_action_1: {
+                text: `你告訴她：「再不訂購鍋子和爐具，就來不及開張。」
+她垂下眼睛咬著下唇。幾分鐘後，她告訴了你所有積蓄的數目。
 
-        // --- 結局判定 ---
-        ending_god: {
-            [span_10](start_span)text: "【結局：種植上帝】\n\n你的神性已達到頂峰。\n野草已被清除，土地已被開墾。\n女人們在你眼中不再是人，而是供你重生的養分。\n你不需要上帝，因為你已經成為了自己的上帝[span_10](end_span)。",
-            choices: [
-                { text: "重新開始", target: "reset" }
-            ]
-        }
-    };
+幾天後，你的帳戶多了一筆款項。這就夠了。`,
+                effect: { divinity: 10, dominance: 15, hemingMoney: 1 },
+                choices: [
+                    { text: "她已無利用價值，尋找下一個目標", target: "start" }
+                ]
+            },
+            heming_action_2: {
+                text: `你像上帝一樣，對她的苦難保持緘默。
+她因為恐懼失去你，變得更加卑微。
 
-    // 遊戲邏輯
-    function updateStats(effect) {
-        if (!effect) return;
-        state.divinity += effect.divinity || 0;
-        state.dominance += effect.dominance || 0;
-        state.hemingMoney += effect.hemingMoney || 0;
-        state.huihuiWeight += effect.huihuiWeight || 0;
-        state.etherPain += effect.etherPain || 0;
+你看著她逐漸透明的樣子，感到一種殘酷的滿足。`,
+                effect: { divinity: 15, dominance: 5 },
+                choices: [
+                    { text: "繼續", target: "start" }
+                ]
+            },
 
-        // 限制最大值
-        state.divinity = Math.min(100, state.divinity);
-        state.dominance = Math.min(100, state.dominance);
+            // --- 灰灰支線 ---
+            huihui_scene: {
+                text: `灰灰躲在陰影裡。她覺得自己的影子像海一樣安全。
+午餐時間到了，你準備了一桌豐盛的菜餚。
+她看著食物，強忍著嘔吐的衝動。`,
+                choices: [
+                    { text: "【強制飼育】：逼她吃下讓她過敏的蘑菇炒蛋和討厭的蘆筍大蝦。", target: "huihui_action_1" },
+                    { text: "【精神控制】：抱怨她盛飯的形狀不對，或者喝水的速度太慢。", target: "huihui_action_2" },
+                    { text: "返回選擇對象", target: "start" }
+                ]
+            },
+            huihui_action_1: {
+                text: `你盯著她進食，確保食物經過她的喉嚨。
+你對她說：「進食並不是為了得到愉悅。」
+看著她吞嚥下那些讓她痛苦的食物，你感到一種飼主的快感。`,
+                effect: { divinity: 5, dominance: 20, huihuiWeight: 1 },
+                choices: [
+                    { text: "繼續", target: "start" }
+                ]
+            },
+            huihui_action_2: {
+                text: `你的慍怒沒有具體理由，但足以讓她瑟瑟發抖。
+她在你的注視下，覺得自己像一所積滿廢物的房間。
+她為了討好你，把自己縮得更小了。`,
+                effect: { divinity: 10, dominance: 10 },
+                choices: [
+                    { text: "繼續", target: "start" }
+                ]
+            },
 
-        document.getElementById('divinity').innerText = state.divinity + "%";
-        document.getElementById('dominance').innerText = state.dominance + "%";
-    }
+            // --- 以太支線 ---
+            ether_scene: {
+                text: `你無法忘掉以太腿部的線條，那就像田裡未除的野草。
+房間裡只有靜默，她試圖開口說話。
+她問：「你把我當作什麼呢？」聲音像一頭受傷的獸。`,
+                choices: [
+                    { text: "【語言利刃】：「只有不確定自己是什麼的人，才會在意別人怎樣看待他。」", target: "ether_action_1" },
+                    { text: "【肉體痛楚】：按壓她虎口的穴道，直到她慘叫。", target: "ether_action_2" },
+                    { text: "返回選擇對象", target: "start" }
+                ]
+            },
+            ether_action_1: {
+                text: `你冷冷地打斷了她的句子。
+你心裡想著：「愛的意思就是，我可以任意傷害你。」
+她陷入了絕望的沉默，你感到神清氣爽。`,
+                effect: { divinity: 20, dominance: 10, etherPain: 1 },
+                choices: [
+                    { text: "繼續", target: "start" }
+                ]
+            },
+            ether_action_2: {
+                text: `你用力按壓，力度越來越大。
+這世上沒有什麼無法被取代，尤其是痛。
+看著她扭曲的臉，你覺得這才是一種真實的交流。`,
+                effect: { divinity: 10, dominance: 20 },
+                choices: [
+                    { text: "繼續", target: "start" }
+                ]
+            },
 
-    function renderScene(sceneKey) {
-        const scene = scenes[sceneKey];
-        const textElement = document.getElementById('story-text');
-        const choicesContainer = document.getElementById('choices-container');
+            // --- 結局判定 ---
+            ending_god: {
+                text: `【結局：種植上帝】
 
-        // 檢查勝利條件
-        if (state.divinity >= 100 || (state.hemingMoney > 0 && state.huihuiWeight > 0 && state.etherPain > 0)) {
-            if (sceneKey !== 'ending_god' && sceneKey !== 'reset') {
-                renderScene('ending_god');
+你的神性已達到頂峰。
+野草已被清除，土地已被開墾。
+女人們在你眼中不再是人，而是供你重生的養分。
+你不需要上帝，因為你已經成為了自己的上帝。`,
+                choices: [
+                    { text: "重新開始這場獻祭", target: "reset" }
+                ]
+            }
+        };
+
+        // 核心功能
+        window.renderScene = function(sceneKey) {
+            const scene = scenes[sceneKey];
+            const textElement = document.getElementById('story-text');
+            const choicesContainer = document.getElementById('choices-container');
+
+            if (!scene) {
+                console.error("找不到場景:", sceneKey);
+                textElement.innerText = "遊戲發生錯誤：找不到場景 " + sceneKey;
                 return;
             }
+
+            // 檢查勝利條件 (滿神性 或 三人皆已被收割)
+            if (state.divinity >= 100 || (state.hemingMoney > 0 && state.huihuiWeight > 0 && state.etherPain > 0)) {
+                if (sceneKey !== 'ending_god' && sceneKey !== 'reset') {
+                    renderScene('ending_god');
+                    return;
+                }
+            }
+
+            // 處理重置
+            if (sceneKey === 'reset') {
+                state.divinity = 10;
+                state.dominance = 0;
+                state.hemingMoney = 0;
+                state.huihuiWeight = 0;
+                state.etherPain = 0;
+                updateStats({}); 
+                renderScene('start');
+                return;
+            }
+
+            // 更新文本
+            textElement.classList.remove('fade-in');
+            void textElement.offsetWidth; // 觸發重繪動畫
+            textElement.classList.add('fade-in');
+            textElement.innerText = scene.text;
+
+            // 更新數值
+            if (scene.effect) {
+                updateStats(scene.effect);
+            }
+
+            // 生成選項按鈕
+            choicesContainer.innerHTML = '';
+            scene.choices.forEach(choice => {
+                const button = document.createElement('button');
+                button.innerText = choice.text;
+                button.onclick = () => renderScene(choice.target);
+                choicesContainer.appendChild(button);
+            });
+        };
+
+        function updateStats(effect) {
+            state.divinity += effect.divinity || 0;
+            state.dominance += effect.dominance || 0;
+            state.hemingMoney += effect.hemingMoney || 0;
+            state.huihuiWeight += effect.huihuiWeight || 0;
+            state.etherPain += effect.etherPain || 0;
+
+            // 限制最大值 100
+            state.divinity = Math.min(100, state.divinity);
+            state.dominance = Math.min(100, state.dominance);
+
+            document.getElementById('divinity').innerText = state.divinity + "%";
+            document.getElementById('dominance').innerText = state.dominance + "%";
         }
 
-        // 處理重置
-        if (sceneKey === 'reset') {
-            state.divinity = 10;
-            state.dominance = 0;
-            state.hemingMoney = 0;
-            state.huihuiWeight = 0;
-            state.etherPain = 0;
-            updateStats({}); // 刷新顯示
-            renderScene('start');
-            return;
-        }
-
-        // 更新文本
-        textElement.classList.remove('fade-in');
-        void textElement.offsetWidth; // 觸發重繪
-        textElement.classList.add('fade-in');
-        textElement.innerText = scene.text;
-
-        // 更新效果
-        if (scene.effect) {
-            updateStats(scene.effect);
-        }
-
-        // 生成選項
-        choicesContainer.innerHTML = '';
-        scene.choices.forEach(choice => {
-            const button = document.createElement('button');
-            button.innerText = choice.text;
-            button.onclick = () => renderScene(choice.target);
-            choicesContainer.appendChild(button);
-        });
-    }
-
-    // 初始化遊戲
-    renderScene('start');
-
+        // 開始遊戲
+        console.log("Game Initialized");
+        renderScene('start');
+    };
 </script>
 
 </body>
