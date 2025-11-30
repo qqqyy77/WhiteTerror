@@ -2,367 +2,186 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>火的飢餓：日常侵蝕版</title>
+    <title>台海戰略模擬原型</title>
     <style>
-        body {
-            background-color: #121212;
-            color: #d0d0d0;
-            font-family: 'Songti TC', 'Noto Serif TC', serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            line-height: 1.8;
-        }
-
-        .game-container {
-            width: 800px;
-            max-width: 90%;
-            background-color: #1e1e1e;
-            padding: 40px;
-            border: 1px solid #333;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
-            position: relative;
-        }
-
-        h1 {
-            color: #a72828;
-            text-align: center;
-            border-bottom: 1px solid #a72828;
-            padding-bottom: 20px;
-            margin-top: 0;
-            font-weight: normal;
-            letter-spacing: 5px;
-        }
-
-        .stats-bar {
+        body { font-family: 'Microsoft JhengHei', sans-serif; background-color: #222; color: #fff; display: flex; flex-direction: column; align-items: center; }
+        h1 { margin-top: 20px; }
+        
+        /* 遊戲區域 */
+        #game-board {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 30px;
-            padding: 15px;
-            background-color: #252525;
-            border-left: 3px solid #a72828;
-            border-radius: 4px;
+            width: 800px;
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #333;
+            border-radius: 10px;
         }
 
-        .stat-item {
-            font-size: 0.95em;
+        .faction {
+            width: 45%;
+            padding: 20px;
+            border: 2px solid #555;
+            text-align: center;
+            border-radius: 8px;
         }
 
-        .stat-value {
-            color: #a72828;
-            font-weight: bold;
-            margin-left: 5px;
-        }
+        .faction.blue { border-color: #4da6ff; background: rgba(0, 0, 255, 0.1); }
+        .faction.red { border-color: #ff4d4d; background: rgba(255, 0, 0, 0.1); }
 
-        #story-text {
-            min-height: 120px;
-            margin-bottom: 40px;
-            font-size: 1.15em;
-            white-space: pre-wrap; 
-        }
-
-        .choices {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
+        .stat { font-size: 1.2rem; margin: 10px 0; }
+        
+        /* 控制區 */
+        #controls { margin-top: 20px; }
         button {
-            background-color: #2a2a2a;
-            color: #ccc;
-            border: 1px solid #444;
-            padding: 18px;
-            text-align: left;
+            padding: 10px 20px;
+            font-size: 1rem;
             cursor: pointer;
-            transition: all 0.2s ease;
-            font-family: inherit;
-            font-size: 1.05em;
-            border-radius: 4px;
+            background-color: #444;
+            color: white;
+            border: 1px solid #666;
+            margin: 0 5px;
+            transition: 0.3s;
         }
-
-        button:hover {
-            background-color: #a72828;
-            color: #fff;
-            border-color: #ff4d4d;
-            transform: translateX(5px);
-        }
-
-        .fade-in {
-            animation: fadeIn 0.8s;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        button:hover { background-color: #666; }
+        
+        #log {
+            margin-top: 20px;
+            width: 800px;
+            height: 150px;
+            background: #000;
+            overflow-y: scroll;
+            padding: 10px;
+            font-family: monospace;
+            border: 1px solid #444;
+            color: #0f0;
         }
     </style>
 </head>
 <body>
 
-<div class="game-container">
-    <h1>火的飢餓</h1>
-    
-    <div class="stats-bar">
-        <div class="stat-item">神性 (Divinity): <span id="divinity" class="stat-value">10%</span></div>
-        <div class="stat-item">依賴度 (Dependency): <span id="dependency" class="stat-value">0%</span></div>
-    </div>
+    <h1>台海戰略模擬 (Web Prototype)</h1>
 
-    <div id="story-text" class="fade-in">
-        正在載入劇本...
-    </div>
-
-    <div class="choices" id="choices-container">
+    <div id="game-board">
+        <div class="faction blue">
+            <h2>防守方 (Blue)</h2>
+            <div class="stat">兵力: <span id="blue-units">10000</span></div>
+            <div class="stat">防空網: <span id="blue-defense">100%</span></div>
+            <div class="stat">士氣: <span id="blue-morale">100</span></div>
         </div>
-</div>
 
-<script>
-    window.onload = function() {
-        
-        // 遊戲狀態
-        const state = {
-            divinity: 10,
-            dependency: 0, // 新增：依賴度（越高越容易在最後被收割）
-            hemingStatus: 0,
-            huihuiStatus: 0,
-            etherStatus: 0
+        <div class="faction red">
+            <h2>進攻方 (Red)</h2>
+            <div class="stat">兵力: <span id="red-units">50000</span></div>
+            <div class="stat">兩棲能力: <span id="red-landing">100%</span></div>
+            <div class="stat">後勤: <span id="red-supply">100</span></div>
+        </div>
+    </div>
+
+    <div id="controls">
+        <button onclick="simulateTurn('air_raid')">紅軍：空襲</button>
+        <button onclick="simulateTurn('missile_defense')">藍軍：飛彈攔截</button>
+        <button onclick="simulateTurn('amphibious')">紅軍：登陸作戰</button>
+        <button onclick="resetGame()">重置局勢</button>
+    </div>
+
+    <div id="log" id="battle-log"></div>
+
+    <script>
+        // 遊戲狀態數據
+        let gameState = {
+            blue: { units: 10000, defense: 100, morale: 100 },
+            red: { units: 50000, landing: 100, supply: 100 }
         };
 
-        // 文本數據
-        const scenes = {
-            start: {
-                text: `你是火。在你眼中，愛情不過是一場漫長的獻祭。
-你還不想立刻毀掉她們，你想先「改造」她們。
-在那些看似平常的情侶日常裡，你如何扮演上帝？
-
-請選擇今天的行程：`,
-                choices: [
-                    { text: "【日常：試衣間】與灰灰去買衣服", target: "huihui_daily" },
-                    { text: "【日常：同學會】陪河明參加聚會", target: "heming_daily" },
-                    { text: "【日常：看電影】與以太的週末夜", target: "ether_daily" },
-                    { text: "跳過日常，直接進入「收割」階段", target: "harvest_phase" }
-                ]
-            },
+        // 更新畫面 UI
+        function updateUI() {
+            document.getElementById('blue-units').innerText = gameState.blue.units;
+            document.getElementById('blue-defense').innerText = gameState.blue.defense + '%';
+            document.getElementById('blue-morale').innerText = gameState.blue.morale;
             
-            // --- 灰灰的日常 (身體羞辱與控制) ---
-            huihui_daily: {
-                text: `灰灰拿著一件鮮紅色的連身裙，興奮地在你面前比劃。
-那是她以前不敢穿的顏色，但最近她以為你在意她，所以想變得漂亮一點。
-鏡子裡的她，身形依然豐腴，但在紅色裙子下顯得生機勃勃。
+            document.getElementById('red-units').innerText = gameState.red.units;
+            document.getElementById('red-landing').innerText = gameState.red.landing + '%';
+            document.getElementById('red-supply').innerText = gameState.red.supply;
+        }
 
-你看著她期待的眼神，決定說：`,
-                choices: [
-                    { text: "「紅色太顯眼了，這會讓你看起來像一塊...過度膨脹的肉。」", target: "huihui_daily_bad" },
-                    { text: "「我喜歡你穿灰色的。像影子一樣，那才是最安全的顏色。」", target: "huihui_daily_control" }
-                ]
-            },
-            huihui_daily_bad: {
-                text: `灰灰的笑容瞬間凍結。她看著鏡子裡的自己，原本的自信變成了羞恥。
-她默默放回了紅裙子，低下頭說：「對不起，你是對的。」
-她對身體的厭惡加深了，而你是唯一能「包容」她醜陋的人。`,
-                effect: { divinity: 5, dependency: 10 },
-                choices: [{ text: "返回選擇行程", target: "start" }]
-            },
-            huihui_daily_control: {
-                text: `你溫柔地幫她挑了一件寬大的灰色麻布衣，那是你喜歡的顏色——灰霧的顏色。
-「穿上這個，你就屬於我了。」你說。
-她感動地穿上了那件讓她消失在背景裡的衣服，覺得被你保護著。`,
-                effect: { divinity: 5, dependency: 15 },
-                choices: [{ text: "返回選擇行程", target: "start" }]
-            },
+        // 寫入戰鬥日誌
+        function logMessage(msg) {
+            const logDiv = document.getElementById('log');
+            const p = document.createElement('div');
+            p.innerText = `> ${msg}`;
+            logDiv.prepend(p);
+        }
 
-            // --- 河明的日常 (社交隔離與自我懷疑) ---
-            heming_daily: {
-                text: `河明帶你參加她大學同學的聚會。她曾經是個開朗的人，但在這群老朋友面前，她現在顯得畏縮。
-有人問起她：「河明，你最近工作還好嗎？聽說你辭職了？」
-河明正要開口解釋她為了你的餐廳所做的犧牲。
-
-你決定：`,
-                choices: [
-                    { text: "搶在她前面開口：「她現在需要休息，以前的工作太消耗她了。」", target: "heming_daily_silence" },
-                    { text: "在桌下輕輕捏她的手，用眼神暗示她：「別說錯話。」", target: "heming_daily_fear" }
-                ]
-            },
-            heming_daily_silence: {
-                text: `你替她發言，語氣體貼得無懈可擊。
-朋友們紛紛稱讚你：「真是個好男友。」
-河明張開的嘴又閉上了。她發現自己失去了聲音，在這個世界上，只有你能代表她說話。`,
-                effect: { divinity: 5, dependency: 15 },
-                choices: [{ text: "返回選擇行程", target: "start" }]
-            },
-            heming_daily_fear: {
-                text: `她接收到了你的信號，立刻變得結巴，草草結束了話題。
-整晚她都緊緊抓著你的袖子，像個怕做錯事的孩子。
-離開聚會時，她甚至向你道歉：「對不起，我剛才是不是表現得很丟臉？」`,
-                effect: { divinity: 10, dependency: 10 },
-                choices: [{ text: "返回選擇行程", target: "start" }]
-            },
-
-            // --- 以太的日常 (情感否定與痛覺轉移) ---
-            ether_daily: {
-                text: `週末晚上，你們窩在沙發上看電影。那是一部感人的愛情片，女主角在雨中哭泣。
-以太也跟著哭了，她的眼淚流得很兇，彷彿觸動了她內心深處某個關於被愛的傷口。
-她轉頭看向你，渴望一個擁抱，或者一句安慰。
-
-你決定：`,
-                choices: [
-                    { text: "冷眼旁觀：「這只是電影，你的眼淚太廉價了。」", target: "ether_daily_cold" },
-                    { text: "用手背輕輕滑過她的臉頰，然後用力掐住她的下巴。", target: "ether_daily_pain" }
-                ]
-            },
-            ether_daily_cold: {
-                text: `她愣住了，眼淚還掛在臉上，卻不敢再流下來。
-「你太情緒化了，這很不健康。」你以理性的姿態審判她。
-她擦乾眼淚，開始懷疑自己的感受是否都是錯的。她需要你來告訴她什麼才是「正確的情緒」。`,
-                effect: { divinity: 5, dependency: 10 },
-                choices: [{ text: "返回選擇行程", target: "start" }]
-            },
-            ether_daily_pain: {
-                text: `你掐著她的下巴，力道大到讓她輕輕吸了一口氣。
-「比起哭，這樣的痛是不是更真實？」你微笑著問。
-她看著你的眼睛，迷茫地點了點頭。她把痛覺誤認為了親密。`,
-                effect: { divinity: 10, dependency: 15 },
-                choices: [{ text: "返回選擇行程", target: "start" }]
-            },
-
-            // --- 收割階段 (原本的劇情) ---
-            harvest_phase: {
-                text: `日常的鋪墊已經足夠。她們現在對你言聽計從，像等待收割的麥子。
-現在，你的鐮刀要揮向誰？`,
-                choices: [
-                    { text: "前往【河明】：榨乾最後一分錢", target: "heming_scene" },
-                    { text: "前往【灰灰】：填滿最後一口飯", target: "huihui_scene" },
-                    { text: "前往【以太】：給予最後的痛楚", target: "ether_scene" }
-                ]
-            },
-
-            // ... (保留原本的收割劇情，增加數值判斷) ...
-            heming_scene: {
-                text: `河明的存款已見底。她看著你，眼神中還有最後一絲期待。
-「我把一切都給你了...你會留下來嗎？」`,
-                choices: [
-                    { text: "拿走錢，告訴她：「這就夠了。」然後消失。", target: "heming_end" }
-                ]
-            },
-            heming_end: {
-                text: `你拿到了錢。河明的影子徹底消失了。
-因為之前的日常鋪墊（高依賴度），她沒有吵鬧，只是安靜地崩潰了。
-她覺得是自己不夠好，無法滿足你的夢想。`,
-                effect: { divinity: 20, hemingStatus: 1 },
-                choices: [{ text: "尋找下一個目標", target: "check_end" }]
-            },
-
-            huihui_scene: {
-                text: `灰灰已經胖得無法看清自己的腳尖。
-你端上最後一盤她過敏的食物。`,
-                choices: [
-                    { text: "命令她：「吃下去，這是為了你好。」", target: "huihui_end" }
-                ]
-            },
-            huihui_end: {
-                text: `她邊哭邊吃，因為她記得你在試衣間說過，她是屬於你的影子。
-她吞下了所有的食物，也吞下了所有的尊嚴。
-你感到無比的滿足。`,
-                effect: { divinity: 20, huihuiStatus: 1 },
-                choices: [{ text: "尋找下一個目標", target: "check_end" }]
-            },
-
-            ether_scene: {
-                text: `以太在深夜質問你：「你把我當什麼？」
-但因為之前的調教，她的聲音顫抖而不自信。`,
-                choices: [
-                    { text: "告訴她：「愛的意思就是，我可以任意傷害你。」", target: "ether_end" }
-                ]
-            },
-            ether_end: {
-                text: `她接受了這個邏輯。
-既然痛是愛，那你對她的傷害就是最深沉的愛。
-她不再反抗，成為了你永恆的信徒。`,
-                effect: { divinity: 20, etherStatus: 1 },
-                choices: [{ text: "尋找下一個目標", target: "check_end" }]
-            },
-
-            check_end: {
-                text: `你環顧四周，檢查還有沒有未收割的作物。`,
-                choices: [
-                    { text: "繼續收割其他人", target: "harvest_phase" } // 簡化邏輯，讓玩家自己選
-                ]
-            },
-
-            // 結局
-            ending_god: {
-                text: `【結局：荒原上的神】
-
-所有的田地都已荒蕪，所有的養分都歸於你。
-你不需要任何人，你也不愛任何人。
-你站在鏡子前，看見裡面只有你自己——一個巨大的、吞噬一切的神。`,
-                choices: [
-                    { text: "重新開始", target: "reset" }
-                ]
+        // 模擬回合邏輯
+        function simulateTurn(action) {
+            // 檢查遊戲是否結束
+            if (gameState.blue.units <= 0 || gameState.blue.morale <= 0) {
+                logMessage("【戰報】防守方崩潰，進攻方獲勝。");
+                return;
             }
-        };
-
-        // 邏輯控制
-        window.renderScene = function(sceneKey) {
-            // 自動跳轉結局判斷
-            if (sceneKey === 'check_end') {
-                if (state.hemingStatus && state.huihuiStatus && state.etherStatus) {
-                    renderScene('ending_god');
-                    return;
-                } else {
-                    renderScene('harvest_phase'); // 回去選還沒死的人
-                    return;
-                }
-            }
-
-            const scene = scenes[sceneKey];
-            const textElement = document.getElementById('story-text');
-            const choicesContainer = document.getElementById('choices-container');
-
-            if (sceneKey === 'reset') {
-                state.divinity = 10;
-                state.dependency = 0;
-                state.hemingStatus = 0;
-                state.huihuiStatus = 0;
-                state.etherStatus = 0;
-                updateStats({});
-                renderScene('start');
+            if (gameState.red.units <= 0 || gameState.red.supply <= 0) {
+                logMessage("【戰報】進攻方兵力耗盡，防守成功。");
                 return;
             }
 
-            // 動畫與文本更新
-            textElement.classList.remove('fade-in');
-            void textElement.offsetWidth;
-            textElement.classList.add('fade-in');
-            textElement.innerText = scene.text;
+            // 簡單的亂數計算
+            let roll = Math.random();
 
-            if (scene.effect) updateStats(scene.effect);
+            if (action === 'air_raid') {
+                logMessage("紅軍發動空襲...");
+                if (roll > 0.4) {
+                    let dmg = Math.floor(Math.random() * 500);
+                    let defDmg = Math.floor(Math.random() * 10);
+                    gameState.blue.units -= dmg;
+                    gameState.blue.defense -= defDmg;
+                    logMessage(`空襲成功！造成藍軍 ${dmg} 單位損失，防空網受損 ${defDmg}%`);
+                } else {
+                    let loss = Math.floor(Math.random() * 100);
+                    gameState.red.units -= loss;
+                    logMessage(`空襲遭遇強烈抵抗，紅軍損失 ${loss} 單位。`);
+                }
+            } 
+            else if (action === 'missile_defense') {
+                logMessage("藍軍啟動飛彈防禦系統...");
+                gameState.blue.defense = Math.min(100, gameState.blue.defense + 10);
+                gameState.red.supply -= 5;
+                logMessage("防空網修復中，消耗敵方後勤。");
+            }
+            else if (action === 'amphibious') {
+                logMessage("紅軍嘗試登陸作戰...");
+                if (gameState.blue.defense > 50) {
+                    let loss = Math.floor(Math.random() * 1000);
+                    gameState.red.units -= loss;
+                    logMessage(`登陸失敗！因為藍軍防空與制海權尚存，紅軍損失 ${loss} 單位。`);
+                } else {
+                    let dmg = Math.floor(Math.random() * 2000);
+                    gameState.blue.units -= dmg;
+                    gameState.blue.morale -= 20;
+                    logMessage(`登陸成功！建立灘頭堡，藍軍損失 ${dmg} 單位，士氣大跌。`);
+                }
+            }
 
-            choicesContainer.innerHTML = '';
-            scene.choices.forEach(choice => {
-                const button = document.createElement('button');
-                button.innerText = choice.text;
-                button.onclick = () => renderScene(choice.target);
-                choicesContainer.appendChild(button);
-            });
-        };
-
-        function updateStats(effect) {
-            state.divinity += effect.divinity || 0;
-            state.dependency += effect.dependency || 0;
+            // 邊界檢查
+            if(gameState.blue.units < 0) gameState.blue.units = 0;
+            if(gameState.red.units < 0) gameState.red.units = 0;
             
-            // 限制
-            state.divinity = Math.min(100, state.divinity);
-
-            document.getElementById('divinity').innerText = state.divinity + "%";
-            document.getElementById('dependency').innerText = state.dependency + "%";
+            updateUI();
         }
 
-        renderScene('start');
-    };
-</script>
+        function resetGame() {
+            gameState = {
+                blue: { units: 10000, defense: 100, morale: 100 },
+                red: { units: 50000, landing: 100, supply: 100 }
+            };
+            document.getElementById('log').innerHTML = '';
+            logMessage("遊戲已重置。");
+            updateUI();
+        }
 
+        // 初始化
+        updateUI();
+        logMessage("模擬系統啟動。等待指令...");
+    </script>
 </body>
 </html>
